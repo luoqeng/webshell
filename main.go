@@ -4,13 +4,17 @@ import (
 	//"fmt"
 	"bytes"
 	"encoding/json"
+	"flag"
 	"io"
 	"log"
 	"net/http"
 	"os/exec"
 )
 
+var secr *string
+
 type Command struct {
+	Secr string
 	Cmd  string
 	Opt  string
 	Args string
@@ -20,6 +24,11 @@ func handler(w http.ResponseWriter, r *http.Request) {
 	var req Command
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
 		http.Error(w, err.Error(), 400)
+		return
+	}
+
+	if req.Secr != *secr {
+		http.Error(w, "secr err", 400)
 		return
 	}
 
@@ -62,8 +71,12 @@ func handler(w http.ResponseWriter, r *http.Request) {
 }
 
 func main() {
+	addr := flag.String("addr", ":9090", "bind addr and port")
+	secr = flag.String("secr", "secretkey", "secret key")
+	flag.Parse()
+
 	http.HandleFunc("/", handler)
-	http.ListenAndServe(":9090", nil)
+	http.ListenAndServe(*addr, nil)
 }
 
-// curl -X POST -d '{"cmd": "bash", "opt": "-c", "args": "ls -l ~; echo hello"}' http://localhost:9090
+// curl -X POST -d '{"secr": "secretkey", "cmd": "bash", "opt": "-c", "args": "ls -l ~; echo hello"}' http://localhost:9090

@@ -1,7 +1,6 @@
 package main
 
 import (
-	//"fmt"
 	"bytes"
 	"encoding/json"
 	"flag"
@@ -11,10 +10,10 @@ import (
 	"os/exec"
 )
 
-var secr *string
+var pass *string
 
 type Command struct {
-	Secr string
+	Pass string
 	Cmd  string
 	Opt  string
 	Args string
@@ -27,8 +26,8 @@ func handler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if req.Secr != *secr {
-		http.Error(w, "secr err", 400)
+	if req.Pass != *pass {
+		http.Error(w, "pass err", 400)
 		return
 	}
 
@@ -71,12 +70,21 @@ func handler(w http.ResponseWriter, r *http.Request) {
 }
 
 func main() {
+	pass = flag.String("pass", "mypass", "passwd")
 	addr := flag.String("addr", ":9090", "bind addr and port")
-	secr = flag.String("secr", "secretkey", "secret key")
+	crt := flag.String("crt", "", "cert file")
+	key := flag.String("key", "", "key file")
 	flag.Parse()
 
 	http.HandleFunc("/", handler)
-	http.ListenAndServe(*addr, nil)
+
+	if *crt == "" || *key == "" {
+		log.Printf("start http server\n")
+		log.Fatal(http.ListenAndServe(*addr, nil))
+	} else {
+		log.Printf("start https server\n")
+		log.Fatal(http.ListenAndServeTLS(*addr, *crt, *key, nil))
+	}
 }
 
-// curl -X POST -d '{"secr": "secretkey", "cmd": "bash", "opt": "-c", "args": "ls -l ~; echo hello"}' http://localhost:9090
+// curl -X POST -d '{"pass": "mypass", "cmd": "bash", "opt": "-c", "args": "ls -l ~; echo hello"}' http://localhost:9090

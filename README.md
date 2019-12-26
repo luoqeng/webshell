@@ -1,15 +1,15 @@
 # webshell
 webshell golang implementation
 
-run
+run http
 ```
 go get github.com/luoqeng/webshell
 
 go build
 
-./webshell -secr="secretkey" -addr=":9090"
+./webshell -pass="mypass" -addr=":9090"
 
-curl -X POST -d '{"secr": "secretkey", "cmd": "bash", "opt": "-c", "args": "ls -l ~; echo hello"}' http://localhost:9090
+curl -X POST -d '{"pass": "mypass", "cmd": "bash", "opt": "-c", "args": "ls -l ~; echo hello"}' http://localhost:9090
 total 20
 drwxrwxr-x 10 luoqeng luoqeng 4096 Jul  6 17:25 dev
 drwxrwxr-x  3 luoqeng luoqeng 4096 Jul  9 15:01 download
@@ -19,4 +19,19 @@ hello
 
 ```
 
-TODO support TLS
+run https
+```
+openssl ecparam -genkey -name secp384r1 -out server.key
+
+openssl req -new -x509 -sha256 -key server.key -out server.crt -days 3650
+
+./webshell -pass="mypass" -addr=":9090" -crt=server.crt -key=server.key
+
+curl -k -X POST -d '{"pass": "mypass", "cmd": "bash", "opt": "-c", "args": "ls -l ~; echo hello"}' https://localhost:9090
+
+```
+
+[Let's Encrypt ](https://certbot.eff.org/instructions)
+```
+sudo certbot certonly --standalone
+```
